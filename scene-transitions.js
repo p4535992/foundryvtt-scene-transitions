@@ -63,6 +63,7 @@ class Transition {
 			fadeIn: 400,
 			delay:4000,
 			fadeOut:1000,
+            volume:1.0,
 			skippable:true,
 			content:""
 		}
@@ -73,7 +74,7 @@ class Transition {
     }
 
 	render(){
-		$('body').append('<div id="transition" class="transition"><div class="transition-bg"></div><div class="transition-content"></div><audio><source src=""></audio></div>');
+		$('body').append('<div id="transition" class="transition"><div class="transition-bg"></div><div class="transition-content"></div><audio class="audio"><source src=""></audio></div>');
 		this.modal = $('#transition');
 		this.modal.css({backgroundColor:this.options.bgColor})
 		this.modal.find('.transition-bg').css({backgroundImage:'url('+this.options.bgImg+')',opacity:this.options.bgOpacity,backgroundSize:this.options.bgSize,backgroundPosition:this.options.bgPos})
@@ -82,6 +83,7 @@ class Transition {
 			this.audio = this.modal.find('audio')[0];
 			this.modal.find('audio').attr('src',this.options.audio);
 			this.audio.load();
+            this.audio.volume = this.options.volume.toFixed(1);
 			this.audio.play();
 		}
 
@@ -119,9 +121,7 @@ class Transition {
 
 	updateData(newData){
 		this.options = mergeObject(this.options,newData);
-		
 		return this;
-
 	}
 
 	playSound(){
@@ -277,6 +277,7 @@ class TransitionForm extends FormApplication {
         const bgPosInput = html.find('input[name="bgPos"]');
         const fontSizeInput = html.find('input[name="fontSize"]')
         const textEditor = html.find('.mce-content-body');
+        const volumeSlider = html.find('input[name="volume"]');
         
         const preview = $('#transition');
         bgSizeInput.on('change', e =>{
@@ -298,6 +299,11 @@ class TransitionForm extends FormApplication {
         fontSizeInput.on('change', e => {
         	preview.find('.transition-content').css('font-size',e.target.value);
         })
+        volumeSlider.on('change', e => {
+            preview.find('audio')[0].volume = e.target.value
+        })
+
+
         html.find('button[name="cancel"]').on('click',()=>{
        		this.close();
         })
