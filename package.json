@@ -2,7 +2,7 @@
 	"name": "scene-transitions",
 	"title": "Scene Transitions",
 	"description": "Create transition between scenes. Or show a Slide from a Journal or Macro for Narration",
-	"version": "12.0.0",
+	"version": "13.0.0",
 	"main": "module.js",
 	"license": "SEE LICENSE IN LICENSE",
 	"private": true,

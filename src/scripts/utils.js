@@ -25,7 +25,9 @@ export class Utils {
         if (!content) return null;
         const parser = new DOMParser();
         const doc = parser.parseFromString(content, "text/html");
-        const src = doc.querySelector("img").getAttribute("src");
+        const imgElement = doc.querySelector("img");
+        if (!imgElement) return null;
+        const src = imgElement.getAttribute("src");
         return src || null;
     }
 

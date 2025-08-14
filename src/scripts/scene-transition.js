@@ -81,22 +81,24 @@ export class SceneTransition {
         return data;
     }
 
-    static addPlayTransitionBtn(idField) {
+    static addPlayTransitionBtn() {
         return {
             name: game.i18n.localize(`${CONSTANTS.MODULE.ID}.label.playTransition`),
             icon: '<i class="fas fa-play-circle"></i>',
             condition: (li) => {
-                const scene = game.scenes?.get(li.data(idField));
-                if (game.user?.isGM && typeof scene.getFlag(CONSTANTS.MODULE.ID, "transition") == "object") {
+                const sceneID = $(li).data("sceneId") || $(li).data("entryId") || $(li).data("documentId");
+                const scene = game.scenes?.get(sceneID);
+                const hasTransition = scene && typeof scene.getFlag(CONSTANTS.MODULE.ID, "transition") == "object";
+                if (game.user?.isGM && hasTransition) {
                     return true;
                 } else {
                     return false;
                 }
             },
             callback: (li) => {
-                let sceneID = li.data(idField);
+                const sceneID = $(li).data("sceneId") || $(li).data("entryId") || $(li).data("documentId");
                 game.scenes?.preload(sceneID, true);
-                const scene = game.scenes?.get(li.data(idField));
+                const scene = game.scenes?.get(sceneID);
                 //@ts-ignore
                 let transition = scene.getFlag(CONSTANTS.MODULE.ID, "transition");
                 let options = transition.options;
@@ -113,20 +115,22 @@ export class SceneTransition {
         };
     }
 
-    static addCreateTransitionBtn(idField) {
+    static addCreateTransitionBtn() {
         return {
             name: "Create Transition",
             icon: '<i class="fas fa-plus-square"></i>',
             condition: (li) => {
-                const scene = game.scenes?.get(li.data(idField));
-                if (game.user?.isGM && !scene.getFlag(CONSTANTS.MODULE.ID, "transition")) {
+                const sceneID = $(li).data("sceneId") || $(li).data("entryId") || $(li).data("documentId");
+                const scene = game.scenes?.get(sceneID);
+                const hasNoTransition = scene && !scene.getFlag(CONSTANTS.MODULE.ID, "transition");
+                if (game.user?.isGM && hasNoTransition) {
                     return true;
                 } else {
                     return false;
                 }
             },
             callback: (li) => {
-                let sceneID = li.data(idField);
+                let sceneID = $(li).data("sceneId") || $(li).data("entryId") || $(li).data("documentId");
                 let options = {
                     sceneID: sceneID,
                 };
@@ -137,20 +141,24 @@ export class SceneTransition {
         };
     }
 
-    static addEditTransitionBtn(idField) {
+    static addEditTransitionBtn() {
         return {
             name: "Edit Transition",
             icon: '<i class="fas fa-edit"></i>',
             condition: (li) => {
-                const scene = game.scenes?.get(li.data(idField));
-                if (game.user?.isGM && scene.getFlag(CONSTANTS.MODULE.ID, "transition")) {
+                const sceneID = $(li).data("sceneId") || $(li).data("entryId") || $(li).data("documentId");
+                const scene = game.scenes?.get(sceneID);
+                const hasTransition = scene && scene.getFlag(CONSTANTS.MODULE.ID, "transition");
+                if (game.user?.isGM && hasTransition) {
                     return true;
                 } else {
                     return false;
                 }
             },
             callback: (li) => {
-                let scene = game.scenes?.get(li.data(idField));
+                let scene = game.scenes?.get(
+                    $(li).data("sceneId") || $(li).data("entryId") || $(li).data("documentId"),
+                );
                 let transition = scene.getFlag(CONSTANTS.MODULE.ID, "transition");
                 let activeTransition = new SceneTransition(true, transition.options, undefined);
                 activeTransition.render();
@@ -159,26 +167,30 @@ export class SceneTransition {
         };
     }
 
-    static addDeleteTransitionBtn(idField) {
+    static addDeleteTransitionBtn() {
         return {
             name: game.i18n.localize(`${CONSTANTS.MODULE.ID}.label.deleteTransition`),
             icon: '<i class="fas fa-trash-alt"></i>',
             condition: (li) => {
-                const scene = game.scenes?.get(li.data(idField));
-                if (game.user?.isGM && scene.getFlag(CONSTANTS.MODULE.ID, "transition")) {
+                const sceneID = $(li).data("sceneId") || $(li).data("entryId") || $(li).data("documentId");
+                const scene = game.scenes?.get(sceneID);
+                const hasTransition = scene && scene.getFlag(CONSTANTS.MODULE.ID, "transition");
+                if (game.user?.isGM && hasTransition) {
                     return true;
                 } else {
                     return false;
                 }
             },
             callback: (li) => {
-                let scene = game.scenes?.get(li.data(idField));
+                let scene = game.scenes?.get(
+                    $(li).data("sceneId") || $(li).data("entryId") || $(li).data("documentId"),
+                );
                 scene.unsetFlag(CONSTANTS.MODULE.ID, "transition");
             },
         };
     }
 
-    static addPlayTransitionBtnJE(idField) {
+    static addPlayTransitionBtnJE() {
         return {
             name: game.i18n.localize(`${CONSTANTS.MODULE.ID}.label.playTransitionFromJournal`),
             icon: '<i class="fas fa-play-circle"></i>',
@@ -190,30 +202,139 @@ export class SceneTransition {
                 }
             },
             callback: (li) => {
-                let id = li.data(idField);
-                let journal = game.journal?.get(id)?.data;
+                let journalID = $(li).data("entryId") || $(li).data("documentId");
+                let journal = game.journal?.get(journalID);
                 if (!journal) {
                     Logger.warn(`No journal is found`);
                     return;
                 }
-                const content = Utils.retrieveFirstTextFromJournalId(id, undefined, false);
-                const img = Utils.retrieveFirstImageFromJournalId(id, undefined, false);
-                let options = new SceneTransitionOptions({
-                    sceneID: undefined,
-                    content: content,
-                    bgImg: img,
-                });
-                options = {
-                    ...options,
-                    fromSocket: true,
-                };
 
-                if (!sceneTransitionsSocket) {
-                    registerSocket();
+                const pages = journal.pages.contents;
+                if (!pages || pages.length === 0) {
+                    Logger.warn(`No pages found in journal`);
+                    return;
                 }
-                sceneTransitionsSocket.executeForEveryone("executeAction", options);
+
+                // If there's only one page, use it directly
+                if (pages.length === 1) {
+                    SceneTransition.playTransitionFromPage(pages[0]);
+                    return;
+                }
+
+                // If there are multiple pages, show a selection dialog
+                SceneTransition.showPageSelectionDialog(journal, pages);
             },
         };
+    }
+
+    static addPlayTransitionBtnJEPage() {
+        return {
+            name: game.i18n.localize(`${CONSTANTS.MODULE.ID}.label.playTransitionFromJournal`),
+            icon: '<i class="fas fa-play-circle"></i>',
+            condition: (li) => {
+                if (game.user?.isGM) {
+                    return true;
+                } else {
+                    return false;
+                }
+            },
+            callback: (li) => {
+                // For individual journal pages, we need to get the page directly
+                let pageID = $(li).data("entryId") || $(li).data("documentId") || $(li).data("pageId");
+                let page = null;
+                
+                // Try to find the page in all journals
+                for (let journal of game.journal) {
+                    page = journal.pages.get(pageID);
+                    if (page) break;
+                }
+                
+                if (!page) {
+                    Logger.warn(`No journal page found with ID: ${pageID}`);
+                    return;
+                }
+
+                SceneTransition.playTransitionFromPage(page);
+            },
+        };
+    }
+
+    /**
+     * Show a dialog to select which page to use for the transition
+     * @param {JournalEntry} journal The journal entry
+     * @param {JournalEntryPage[]} pages The available pages
+     */
+    static async showPageSelectionDialog(journal, pages) {
+        const pageOptions = pages.map(page => {
+            const typeIcon = {
+                text: "fas fa-file-text",
+                image: "fas fa-image", 
+                video: "fas fa-video"
+            }[page.type] || "fas fa-file";
+            
+            return `<option value="${page.id}">
+                <i class="${typeIcon}"></i> ${page.name} (${page.type})
+            </option>`;
+        }).join("");
+
+        const content = `
+            <form>
+                <div class="form-group">
+                    <label>Select a page to use for the transition:</label>
+                    <select name="pageId" style="width: 100%;">
+                        ${pageOptions}
+                    </select>
+                </div>
+            </form>
+        `;
+
+        const selectedPageId = await Dialog.prompt({
+            title: `Select Page from "${journal.name}"`,
+            content: content,
+            callback: (html) => {
+                return html.find('[name="pageId"]').val();
+            },
+            rejectClose: false
+        });
+
+        if (selectedPageId) {
+            const selectedPage = pages.find(p => p.id === selectedPageId);
+            if (selectedPage) {
+                SceneTransition.playTransitionFromPage(selectedPage);
+            }
+        }
+    }
+
+    /**
+     * Play a transition from a specific journal page
+     * @param {JournalEntryPage} page The journal page
+     */
+    static playTransitionFromPage(page) {
+        let content = null;
+        let bgImg = null;
+        let bgLoop = null;
+        let volume = null;
+
+        switch (page.type) {
+            case "image":
+                bgImg = page.src;
+                break;
+            case "text":
+                content = Utils.getTextFromPage(page);
+                bgImg = Utils.getFirstImageFromPage(page);
+                break;
+            case "video":
+                bgImg = page.src;
+                bgLoop = page.video.loop;
+                volume = page.video.volume;
+                break;
+            default:
+                Logger.warn(`Unsupported page type: ${page.type}`);
+                return;
+        }
+
+        const options = new SceneTransitionOptions({ content, bgImg, bgLoop });
+        sceneTransitionsSocket.executeForEveryone("executeAction", options);
     }
 
     /**
@@ -343,11 +464,13 @@ export class SceneTransition {
                     return;
                 }
 
-                // Fix for https://github.com/p4535992/foundryvtt-scene-transitions/issues/39#issuecomment-2425044453 if (this.options.activateScene) {
-                if (game.user?.isGM) {
-                    scene.activate();
-                } else if (game.user?.isGM) {
-                    scene.view();
+                // Only activate scene if the activateScene option is enabled
+                if (this.options.activateScene) {
+                    if (game.user?.isGM) {
+                        scene.activate();
+                    } else {
+                        scene.view();
+                    }
                 }
             }
         };

@@ -14,6 +14,7 @@ Hooks.once("init", async () => {
 Hooks.once("setup", () => {
     game.modules.get(CONSTANTS.MODULE.ID).api = API;
 });
+
 Hooks.once("devModeReady", ({ registerPackageDebugFlag }) => {
     registerPackageDebugFlag(CONSTANTS.MODULE.ID);
 });
@@ -21,38 +22,59 @@ Hooks.once("devModeReady", ({ registerPackageDebugFlag }) => {
 /** ******************
  * Adds menu option to Scene Nav and Directory
  *******************/
-Hooks.on("getSceneNavigationContext", (html, contextOptions) =>
-    addContextButtons("getSceneNavigationContext", contextOptions),
-);
-Hooks.on("getSceneDirectoryEntryContext", (html, contextOptions) =>
-    addContextButtons("getSceneDirectoryEntryContext", contextOptions),
-);
-Hooks.on("getJournalDirectoryEntryContext", (html, contextOptions) =>
-    addContextButtons("getJournalDirectoryEntryContext", contextOptions),
-);
+Hooks.on("getSceneContextOptions", (directory, contextOptions) => {
+    addContextButtons("getSceneContextOptions", contextOptions);
+});
+
+// Try multiple approaches for journal entries to ensure coverage
+Hooks.on("getDocumentContextOptions", (application, contextOptions) => {
+    if (application.document?.documentName === "JournalEntry") {
+        addContextButtons("getJournalEntryContextOptions", contextOptions);
+    } else if (application.document?.documentName === "JournalEntryPage") {
+        addContextButtons("getJournalEntryPageContextOptions", contextOptions);
+    }
+});
+
+// Also try the specific journal entry hook if it exists
+Hooks.on("getJournalEntryContextOptions", (application, contextOptions) => {
+    addContextButtons("getJournalEntryContextOptions", contextOptions);
+});
+
+// Try specific journal page hook
+Hooks.on("getJournalEntryPageContextOptions", (application, contextOptions) => {
+    addContextButtons("getJournalEntryPageContextOptions", contextOptions);
+});
+
+// Fallback for journal directory context
+Hooks.on("getJournalDirectoryContextOptions", (application, contextOptions) => {
+    addContextButtons("getJournalEntryContextOptions", contextOptions);
+});
+
 Hooks.on("renderJournalSheet", (journal) => addJournalButton(journal));
 
 /**
  * Add Create, Edit, Delete, Play context buttons
  * @param {string} hookName      The hook name
- * @param {array} contextOptions The context options
+ * @param {Array} contextOptions The context options
  */
 function addContextButtons(hookName, contextOptions) {
-    const idField = {
-        getJournalDirectoryEntryContext: "documentId",
-        getSceneDirectoryEntryContext: "documentId",
-        getSceneNavigationContext: "sceneId",
-    };
-
-    if (hookName === "getJournalDirectoryEntryContext") {
-        contextOptions.push(SceneTransition.addPlayTransitionBtnJE(idField[hookName]));
+    if (hookName === "getJournalEntryContextOptions") {
+        contextOptions.push(SceneTransition.addPlayTransitionBtnJE());
         return;
     }
 
-    contextOptions.push(SceneTransition.addPlayTransitionBtn(idField[hookName]));
-    contextOptions.push(SceneTransition.addCreateTransitionBtn(idField[hookName]));
-    contextOptions.push(SceneTransition.addEditTransitionBtn(idField[hookName]));
-    contextOptions.push(SceneTransition.addDeleteTransitionBtn(idField[hookName]));
+    if (hookName === "getJournalEntryPageContextOptions") {
+        contextOptions.push(SceneTransition.addPlayTransitionBtnJEPage());
+        return;
+    }
+
+    // For Scene documents
+    if (hookName === "getSceneContextOptions") {
+        contextOptions.push(SceneTransition.addPlayTransitionBtn());
+        contextOptions.push(SceneTransition.addCreateTransitionBtn());
+        contextOptions.push(SceneTransition.addEditTransitionBtn());
+        contextOptions.push(SceneTransition.addDeleteTransitionBtn());
+    }
 }
 
 /**
@@ -76,17 +98,21 @@ function addJournalButton(journal) {
     const existingLink = header.querySelector("a.play-transition");
     if (existingLink) existingLink.remove();
 
-    const page = journal.getData().pages[0];
+    const page = journal.document.pages.contents[0];
     if (!pageTypes.includes(page.type)) return;
 
     const linkElement = document.createElement("a");
     linkElement.classList.add("play-transition");
-    linkElement.innerHTML = `<i class="fas fa-play-circle"></i>Play as Transition`;
+    linkElement.innerHTML = '<i class="fas fa-play-circle"></i>Play as Transition';
     windowTitle.after(linkElement);
 
     linkElement.addEventListener("click", () => onClickJournalButton(page));
 }
 
+/**
+ * Handle click event on journal button to create transition
+ * @param {object} page The journal page
+ */
 function onClickJournalButton(page) {
     let content = null;
     let bgImg = null;

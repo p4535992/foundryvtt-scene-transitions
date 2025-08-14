@@ -1,3 +1,7 @@
+### 13.0.0
+
+- Updated for FoundryVTT v13 compatibility
+
 ### 12.0.1
 
 - Bug fix: https://github.com/p4535992/foundryvtt-scene-transitions/issues/39#issuecomment-2425044453 ty to @Conradhowlf
