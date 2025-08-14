@@ -1,3 +1,7 @@
+### 13.0.1
+
+- Updated for FoundryVTT v13 ty to @rpkelly and the PR https://github.com/p4535992/foundryvtt-scene-transitions/pull/45
+
 ### 13.0.0
 
 - Updated for FoundryVTT v13 compatibility

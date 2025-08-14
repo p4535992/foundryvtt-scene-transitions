@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
+  
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
@@ -44,12 +44,12 @@ jobs:
       #- run: zip -r ./module.zip module.json LICENSE module.js module.js.map style.css templates/ languages/ packs/ assets/
       # - run: zip -r ./package/module.zip ./package/*
 
-      # && ensures that zip only runs if the directory was correctly changed,
-      # and the parentheses run everything in a subshell, so the current directory
+      # && ensures that zip only runs if the directory was correctly changed, 
+      # and the parentheses run everything in a subshell, so the current directory 
       # is restored at the end. Using OLDPWD avoids having to calculate the relative path to package.zip.
       # https://unix.stackexchange.com/questions/385405/zip-all-files-and-subfolder-in-directory-without-parent-directory
       - run: (cd package && zip -r "$OLDPWD/module.zip" .)
-
+      
       - name: Update Release with Files
         id: create_version_release
         uses: ncipollo/release-action@v1
