@@ -242,13 +242,13 @@ export class SceneTransition {
                 // For individual journal pages, we need to get the page directly
                 let pageID = $(li).data("entryId") || $(li).data("documentId") || $(li).data("pageId");
                 let page = null;
-                
+
                 // Try to find the page in all journals
                 for (let journal of game.journal) {
                     page = journal.pages.get(pageID);
                     if (page) break;
                 }
-                
+
                 if (!page) {
                     Logger.warn(`No journal page found with ID: ${pageID}`);
                     return;
@@ -268,10 +268,10 @@ export class SceneTransition {
         const pageOptions = pages.map(page => {
             const typeIcon = {
                 text: "fas fa-file-text",
-                image: "fas fa-image", 
+                image: "fas fa-image",
                 video: "fas fa-video"
             }[page.type] || "fas fa-file";
-            
+
             return `<option value="${page.id}">
                 <i class="${typeIcon}"></i> ${page.name} (${page.type})
             </option>`;
@@ -432,7 +432,7 @@ export class SceneTransition {
 
             this.audio = null;
 
-            AudioHelper.play(
+            foundry.audio.AudioHelper.play(
                 {
                     src,
                     volume,
