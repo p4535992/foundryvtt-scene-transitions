@@ -2,7 +2,7 @@
     "id": "scene-transitions",
     "title": "Scene Transitions",
     "description": "Create transition between scenes. Or show a Slide from a Journal or Macro for Narration",
-    "version": "13.0.1",
+    "version": "14.0.0",
     "authors": [
         {
             "name": "Larkinabout",
@@ -70,8 +70,8 @@
         "verified": 13
     },
     "url": "https://github.com/p4535992/foundryvtt-scene-transitions",
-    "manifest": "https://github.com/p4535992/foundryvtt-scene-transitions/releases/download/13.0.1/module.json",
-    "download": "https://github.com/p4535992/foundryvtt-scene-transitions/releases/download/13.0.1/module.zip",
+    "manifest": "https://github.com/p4535992/foundryvtt-scene-transitions/releases/download/14.0.0/module.json",
+    "download": "https://github.com/p4535992/foundryvtt-scene-transitions/releases/download/14.0.0/module.zip",
     "readme": "https://github.com/p4535992/foundryvtt-scene-transitions/blob/master/README.md",
     "changelog": "https://github.com/p4535992/foundryvtt-scene-transitions/blob/master/CHANGELOG.md",
     "bugs": "https://github.com/p4535992/foundryvtt-scene-transitions/issues",
